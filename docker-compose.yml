@@ -1,0 +1,59 @@
+services:
+    users-master:
+    image: mariadb:10.11
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: users_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./init/users-master.sql:/docker-entrypoint-initdb.d/init.sql
+
+  users-slave:
+    image: mariadb:10.11
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+    ports:
+      - "3307:3306"
+    depends_on:
+      - users-master
+
+    books-shard-a:
+    image: mariadb:10.11
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: books_db
+    ports:
+      - "3308:3306"
+    volumes:
+      - ./init/books-shard-a.sql:/docker-entrypoint-initdb.d/init.sql
+
+    books-shard-b:
+    image: mariadb:10.11
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: books_db
+    ports:
+      - "3309:3306"
+    volumes:
+      - ./init/books-shard-b.sql:/docker-entrypoint-initdb.d/init.sql
+
+    shops-master:
+    image: mariadb:10.11
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: shops_db
+    ports:
+      - "3310:3306"
+    volumes:
+      - ./init/shops.sql:/docker-entrypoint-initdb.d/init.sql
+
+    router:
+    image: proxysql/proxysql:latest
+    ports:
+      - "6033:6033"
+    depends_on:
+      - users-master
+      - books-shard-a
+      - books-shard-b
+      - shops-master
